@@ -6,4 +6,4 @@ before_install:
 # Jitpack and SDKMan Guide: https://dev.to/cicirello/how-to-configure-jitpack-for-recent-jdk-versions-4pek
 # https://jitpack.io/docs/BUILDING/
 install:
-  - ./gradlew install
+  - ./gradlew build publishToMavenLocal -x test
