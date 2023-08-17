@@ -44,7 +44,7 @@ dependencyResolutionManagement {
             library('aspectjweaver', 'org.aspectj', 'aspectjweaver').versionRef('aspectj')
 
             // Java Memory Allocation Tracing
-            library('java-allocation-instrumenter', 'com.google.code.java-allocation-instrumenter:java-allocation-instrumenter:3.3.2')
+            library('java-allocation-instrumenter', 'com.google.code.java-allocation-instrumenter:java-allocation-instrumenter:3.3.3')
 
             library('testng', 'org.testng:testng:7.4.0')
 
