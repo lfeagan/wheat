@@ -9,8 +9,8 @@ public class NanoStopWatchTest {
     public void unstarted() {
         NanoStopWatch sw = NanoStopWatch.createUnstarted();
         Assert.assertFalse(sw.isRunning());
-        Assert.assertEquals(sw.getElapsed(), 0L);
-        Assert.assertEquals(sw.getElapsedSeconds(), 0.0);
+        Assert.assertEquals(sw.elapsedNanos(), 0L);
+        Assert.assertEquals(sw.elapsedSeconds(), 0.0);
         Assert.assertEquals(sw.getCumulative(), 0L);
         try {
             sw.stop();
@@ -20,14 +20,14 @@ public class NanoStopWatchTest {
         }
         sw.start();
         Assert.assertTrue(sw.isRunning());
-        Assert.assertTrue(sw.getElapsed() > 0L);
-        Assert.assertTrue(sw.getElapsedSeconds() > 0.0);
+        Assert.assertTrue(sw.elapsedNanos() > 0L);
+        Assert.assertTrue(sw.elapsedSeconds() > 0.0);
         Assert.assertEquals(sw.getCumulative(), 0L);
 
         sw.stop();
         Assert.assertFalse(sw.isRunning());
-        Assert.assertTrue(sw.getElapsed() > 0L);
-        Assert.assertTrue(sw.getElapsedSeconds() > 0.0);
+        Assert.assertTrue(sw.elapsedNanos() > 0L);
+        Assert.assertTrue(sw.elapsedSeconds() > 0.0);
         Assert.assertTrue(sw.getCumulative() > 0L);
     }
 
@@ -35,8 +35,8 @@ public class NanoStopWatchTest {
     public void started() {
         NanoStopWatch sw = NanoStopWatch.createStarted();
         Assert.assertTrue(sw.isRunning());
-        Assert.assertTrue(sw.getElapsed() > 0L);
-        Assert.assertTrue(sw.getElapsedSeconds() > 0.0);
+        Assert.assertTrue(sw.elapsedNanos() > 0L);
+        Assert.assertTrue(sw.elapsedSeconds() > 0.0);
         Assert.assertEquals(sw.getCumulative(), 0L);
     }
 }
