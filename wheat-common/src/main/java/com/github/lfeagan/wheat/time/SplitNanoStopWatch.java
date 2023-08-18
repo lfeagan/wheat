@@ -1,9 +1,10 @@
 package com.github.lfeagan.wheat.time;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.regex.Matcher;
+
+import static com.github.lfeagan.wheat.time.NanoStopWatch.NANOS_PER_SECOND;
 
 /**
  * An object that measures elapsed time in nanoseconds. This class is superior to directly calling <code>System.nanoTime()</code> in a few ways:
@@ -12,46 +13,91 @@ import java.util.regex.Matcher;
  *     <li>As documented by nanoTime, the value returned has no absolute meaning, and can only be interpreted as relative to another timestamp returned by nanoTime at a different time. Stopwatch is a more effective abstraction because it exposes only these relative values, not the absolute ones.</li>
  * </ol>
  */
-public class SplitNanoStopWatch extends NanoStopWatch {
+public class SplitNanoStopWatch {
+
+    private final NanoStopWatch stopWatch;
 
     /**
-     * The completed splits.
+     * The time splits.
      */
-    private final List<Split> splits = new ArrayList<>();
+    private final Deque<Split> splits = new ConcurrentLinkedDeque<>();
 
+    protected SplitNanoStopWatch(NanoStopWatch stopWatch) {
+        this.stopWatch = stopWatch;
+    }
+
+    public static SplitNanoStopWatch createStarted() {
+        return new SplitNanoStopWatch(NanoStopWatch.createStarted());
+    }
+
+    public static SplitNanoStopWatch createUnstarted() {
+        return new SplitNanoStopWatch(NanoStopWatch.createUnstarted());
+    }
+
+    public void start() {
+        stopWatch.start();
+    }
+
+    public void stop() {
+        stopWatch.stop();
+    }
+
+    public boolean isRunning() {
+        return stopWatch.isRunning();
+    }
+
+    /**
+     * Resets the underlying NanoStopWatch and clears all splits.
+     */
     public void reset() {
-        super.reset();
+        stopWatch.reset();
         splits.clear();
     }
 
+    /**
+     * Creates an anonymous split.
+     * @throws IllegalStateException if the stop watch has not been started
+     */
     public void split() {
+        if (!stopWatch.isRunning()) {
+            throw new IllegalStateException("Stop watch has not been started");
+        }
         final long splitStart;
         if (splits.isEmpty()) {
-            splitStart = start;
+            splitStart = stopWatch.start;
         } else {
-            splitStart = splits.get(splits.size()-1).getStop();
+            splitStart = splits.peekLast().getStop();
         }
         splits.add(new Split(splitStart));
     }
 
+    /**
+     * Creates a split with a description to provide context.
+     * @param description a meaningful description to provide context for the split, need not be unique
+     * @throws IllegalStateException if the stop watch has not been started
+     */
     public void split(final String description) {
+        if (!stopWatch.isRunning()) {
+            throw new IllegalStateException("Stop watch has not been started");
+        }
         final long splitStart;
         if (splits.isEmpty()) {
-            splitStart = start;
+            splitStart = stopWatch.start;
         } else {
-            splitStart = splits.get(splits.size()-1).getStop();
+            splitStart = splits.peekLast().getStop();
         }
         splits.add(new Split(splitStart, description));
     }
 
     public void splitFromNanoWatchStartTime(final String description) {
-        final long splitStart;
-        splitStart = start;
-        splits.add(new Split(splitStart, description));
+        if (!stopWatch.isRunning()) {
+            throw new IllegalStateException("Stop watch has not been started");
+        }
+        splits.add(new Split(stopWatch.start, description));
     }
 
-    public List<Split> getSplits() {
-        return Collections.unmodifiableList(splits);
+    public Split[] getSplits() {
+        return splits.toArray(new Split[splits.size()]);
     }
 
     public List<Split> getSplits(final String description) {
@@ -80,11 +126,7 @@ public class SplitNanoStopWatch extends NanoStopWatch {
         return matches;
     }
 
-    public void clearSplits() {
-        this.splits.clear();
-    }
-
-    public static class Split {
+    public static final class Split {
         final long start;
         final long stop;
         final long elapsed;
@@ -101,11 +143,11 @@ public class SplitNanoStopWatch extends NanoStopWatch {
             this.description = description;
         }
 
-        public long getStart() {
+        private long getStart() {
             return this.start;
         }
 
-        public long getStop() {
+        private long getStop() {
             return this.stop;
         }
 

@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
  *     <li>As documented by nanoTime, the value returned has no absolute meaning, and can only be interpreted as relative to another timestamp returned by nanoTime at a different time. Stopwatch is a more effective abstraction because it exposes only these relative values, not the absolute ones.</li>
  * </ol>
  */
-public class NanoStopWatch {
+public final class NanoStopWatch {
 	
 	protected static final long NANOS_PER_SECOND = 1000000000L;
 	protected static final long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
@@ -28,15 +28,12 @@ public class NanoStopWatch {
 	 */
 	protected long start = 0L;
 
-	/**
-	 * The time that stop was called.
-	 */
-	protected long stop = 0L;
+	protected long elapsedNanos = 0L;
 
 	/**
 	 * The sum of the delta between all the start and stop times.
 	 */
-	protected long cumulative = 0L;
+	protected long cumulativeNanos = 0L;
 
 	protected NanoStopWatch() {}
 
@@ -62,9 +59,8 @@ public class NanoStopWatch {
 		if (isRunning()) {
 			throw new IllegalStateException("Already started");
 		}
-		start = System.nanoTime();
-		stop = 0L;
 		running = true;
+		start = System.nanoTime();
 	}
 
 	/**
@@ -77,35 +73,46 @@ public class NanoStopWatch {
 	 *            time, otherwise it is untouched
 	 */
 	public void start(final boolean restart) {
+		if (isRunning()) {
+			throw new IllegalStateException("Already started");
+		}
 		if (start == 0L || restart) {
 			start = System.nanoTime();
 		}
-		stop = 0L;
 	}
 	
 	public void stop() {
+		final long stop = System.nanoTime();
 		if (!isRunning()) {
 			throw new IllegalStateException("Already stopped");
 		}
-		stop = System.nanoTime();
-		cumulative += (stop - start);
 		running = false;
+		elapsedNanos = (stop - start);
+		cumulativeNanos += elapsedNanos;
 	}
 
+	/**
+	 * Resets the stop watch by setting the following:
+	 * <ol>
+	 *     <li>running is set to false</li>
+	 *     <li>start, stop, and cumulative times are set to 0</li>
+	 * </ol>
+	 */
 	public void reset() {
+		running = false;
 		start = 0L;
-		stop = 0L;
-		cumulative = 0L;
+		elapsedNanos = 0L;
+		cumulativeNanos = 0L;
 	}
 
 	/**
 	 * Returns the cumulative time in nanoseconds. If the watch has not been through
 	 * the start-stop cycle at least once, this will return zero.
 	 * This value is set to <code>0</code> when the stop watch is reset.
-	 * @return
+	 * @return the accumulated time of all start-stop deltas
 	 */
 	public long getCumulative() {
-		return cumulative;
+		return cumulativeNanos;
 	}
 
 	/**
@@ -115,53 +122,25 @@ public class NanoStopWatch {
 	 * @return the elapsed time in nanoseconds, or zero if the watch has not
 	 *         been stopped
 	 */
-	public long getElapsed() {
-		if (isRunning()) {
+	public long elapsedNanos() {
+		if (running) {
 			return System.nanoTime() - start;
 		} else {
-			return stop - start;
+			return elapsedNanos;
 		}
 	}
 
-	public Duration getElapsedDuration() {
-		return Duration.ofNanos(getElapsed());
+	public Duration elapsed() {
+		return Duration.ofNanos(elapsedNanos());
 	}
 
-	public double getElapsedSeconds() {
-		return ((double) getElapsed()) / NANOS_PER_SECOND;
-	}
-
-	public void printElapsedTime() {
-		if (stop != 0) {
-			System.out.println("Elapsed Time: " + getElapsed());
-		} else {
-			if (start == 0) {
-				System.out.println("Timer has not been started");
-			} else {
-				System.out.println("Timer has not been stopped");
-			}
-		}
-	}
-
-	public void printElapsedTime(final Writer writer) {
-		try {
-			if (stop != 0) {
-				writer.write("Elapsed Time: " + getElapsed() + "\n");
-			} else {
-				if (start == 0) {
-					writer.write("Timer has not been started\n");
-				} else {
-					writer.write("Timer has not been stopped\n");
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public double elapsedSeconds() {
+		return ((double) elapsedNanos()) / NANOS_PER_SECOND;
 	}
 
 	@Override
 	public String toString() {
-		return toString(getElapsed());
+		return toString(elapsedNanos());
 	}
 
 	public static String toString(final long elapsed) {
