@@ -20,6 +20,10 @@ dependencyResolutionManagement {
                 strictly '[3.8, 4.0['
                 prefer '3.12.0'
             }
+            library('commons-collections4', 'org.apache.commons', 'commons-collections4').version {
+                strictly '[4.0'
+                prefer '4.4'
+            }
 
             // Google Guava for ImmutableSet
             library('guava', 'com.google.guava:guava:32.1.2-jre')

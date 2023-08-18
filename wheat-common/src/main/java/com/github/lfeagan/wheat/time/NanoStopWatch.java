@@ -3,37 +3,68 @@ package com.github.lfeagan.wheat.time;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 
-public final class NanoStopWatch {
+/**
+ * An object that measures elapsed time in nanoseconds. This class is superior to directly calling <code>System.nanoTime()</code> in a few ways:
+ * <ol>
+ *     <li>As documented by nanoTime, the value returned has no absolute meaning, and can only be interpreted as relative to another timestamp returned by nanoTime at a different time. Stopwatch is a more effective abstraction because it exposes only these relative values, not the absolute ones.</li>
+ * </ol>
+ */
+public class NanoStopWatch {
 	
-	private static final long NANOS_PER_SECOND = 1000000000L;
-	private static final long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
-	private static final long NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
+	protected static final long NANOS_PER_SECOND = 1000000000L;
+	protected static final long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
+	protected static final long NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
 
-	private long start = 0L;
-	private long stop = 0L;
-	private long elapsed = 0L;
-	private final List<Split> splits = new Vector<Split>();
+	protected boolean running = false;
 
-	public NanoStopWatch() {}
-	
-	public NanoStopWatch(boolean start) {
-		if (start) {
-			this.start();
-		}
+	/**
+	 * The time that start was called.
+	 */
+	protected long start = 0L;
+
+	/**
+	 * The time that stop was called.
+	 */
+	protected long stop = 0L;
+
+	/**
+	 * The sum of the delta between all the start and stop times.
+	 */
+	protected long cumulative = 0L;
+
+	protected NanoStopWatch() {}
+
+	public static NanoStopWatch createStarted() {
+		NanoStopWatch nsw = new NanoStopWatch();
+		nsw.start();
+		return nsw;
+	}
+
+	public static NanoStopWatch createUnstarted() {
+		return new NanoStopWatch();
+	}
+
+	public boolean isRunning() {
+		return running;
 	}
 
 	/**
 	 * Starts the stop watch by setting start to the current time and stop to
 	 * zero.
 	 */
-	public synchronized void start() {
+	public void start() {
+		if (isRunning()) {
+			throw new IllegalStateException("Already started");
+		}
 		start = System.nanoTime();
 		stop = 0L;
+		running = true;
 	}
 
 	/**
@@ -45,164 +76,62 @@ public final class NanoStopWatch {
 	 *            if <code>true</code> the start time is set to the current
 	 *            time, otherwise it is untouched
 	 */
-	public synchronized void start(final boolean restart) {
+	public void start(final boolean restart) {
 		if (start == 0L || restart) {
 			start = System.nanoTime();
 		}
 		stop = 0L;
 	}
 	
-	public synchronized void stop() {
+	public void stop() {
+		if (!isRunning()) {
+			throw new IllegalStateException("Already stopped");
+		}
 		stop = System.nanoTime();
-		elapsed += (stop - start);
+		cumulative += (stop - start);
+		running = false;
 	}
 
-	public Duration getDuration() {
-		return Duration.ofNanos(getElapsed());
-	}
-
-	public Duration getDuration(boolean useCurrentTime) {
-		if (useCurrentTime) {
-			return Duration.ofNanos(System.nanoTime() - start);
-		} else {
-			return Duration.ofNanos(getElapsed());
-		}
-	}
-
-	public static class Split {
-		final long start;
-		final long stop;
-		final long elapsed;
-		final String description;
-		
-		Split(final long start) {
-			this(start, "");
-		}
-		
-		public Split(final long start, final String description) {
-			this.start = start;
-			this.stop = System.nanoTime();
-			this.elapsed = stop - start;
-			this.description = description;
-		}
-		
-		public long getStart() {
-			return this.start;
-		}
-		
-		public long getStop() {
-			return this.stop;
-		}
-		
-		public long getElapsed() {
-			return this.elapsed;
-		}
-
-		public double getElapsedSeconds() {
-			return ((double) this.elapsed) / NANOS_PER_SECOND;
-		}
-
-		public String getDescription() {
-			return this.description;
-		}
-		
-		@Override
-		public String toString() {
-			return NanoStopWatch.toString(elapsed);
-		}
-	}
-	
-	public synchronized void split() {
-		final long splitStart;
-		if (splits.isEmpty()) {
-			splitStart = start;
-		} else {
-			splitStart = splits.get(splits.size()-1).getStop();
-		}
-		splits.add(new Split(splitStart));
-	}
-	
-	public synchronized void split(final String description) {
-		final long splitStart;
-		if (splits.isEmpty()) {
-			splitStart = start;
-		} else {
-			splitStart = splits.get(splits.size()-1).getStop();
-		}
-		splits.add(new Split(splitStart, description));
-	}
-
-	public synchronized void splitFromNanoWatchStartTime(final String description) {
-		final long splitStart;
-		splitStart = start;
-		splits.add(new Split(splitStart, description));
-	}
-
-	public synchronized void reset() {
+	public void reset() {
 		start = 0L;
 		stop = 0L;
-		elapsed = 0L;
-		splits.clear();
-	}
-
-	public synchronized long getStart() {
-		return this.start;
-	}
-
-	public synchronized long getStop() {
-		return this.stop;
-	}
-	
-	public synchronized List<Split> getSplits() {
-		return Collections.unmodifiableList(splits);
-	}
-
-	public synchronized List<Split> getSplits(final String description) {
-		final List<Split> matches = new Vector<Split>();
-		for (Split split : splits) {
-			if (description.equals(split.getDescription())) {
-				matches.add(split);
-			}
-		}
-		return matches;
-	}
-
-	public synchronized double getSplitsAverageElapsedTime(final String description) {
-		double avg=getSplits(description).stream().mapToDouble(Split::getElapsedSeconds)
-				.summaryStatistics().getAverage();
-		return avg;
-	}
-
-	public synchronized List<Split> getSplits(final Matcher descriptionMatcher) {
-		final List<Split> matches = new Vector<Split>();
-		for (Split split : splits) {
-			if (descriptionMatcher.reset(split.getDescription()).matches()) {
-				matches.add(split);
-			}
-		}
-		return matches;
-	}
-	
-	public synchronized void clearSplits() {
-		this.splits.clear();
+		cumulative = 0L;
 	}
 
 	/**
-	 * Returns the elapsed time in nanoseconds. If the watch has not been
-	 * stopped, returns <code>0</code>.
-	 * 
+	 * Returns the cumulative time in nanoseconds. If the watch has not been through
+	 * the start-stop cycle at least once, this will return zero.
+	 * This value is set to <code>0</code> when the stop watch is reset.
+	 * @return
+	 */
+	public long getCumulative() {
+		return cumulative;
+	}
+
+	/**
+	 * Returns the elapsed time in nanoseconds. If the watch is running,
+	 * returns the difference between the current nano time and the start time.
+	 *
 	 * @return the elapsed time in nanoseconds, or zero if the watch has not
 	 *         been stopped
 	 */
-	public synchronized long getElapsed() {
-		return elapsed;
-	}
-	
-	public synchronized double getElapsedSeconds() {
-		return ((double) elapsed) / NANOS_PER_SECOND;
+	public long getElapsed() {
+		if (isRunning()) {
+			return System.nanoTime() - start;
+		} else {
+			return stop - start;
+		}
 	}
 
-	public synchronized void printElapsedTime() {
+	public Duration getElapsedDuration() {
+		return Duration.ofNanos(getElapsed());
+	}
+
+	public double getElapsedSeconds() {
+		return ((double) getElapsed()) / NANOS_PER_SECOND;
+	}
+
+	public void printElapsedTime() {
 		if (stop != 0) {
 			System.out.println("Elapsed Time: " + getElapsed());
 		} else {
@@ -214,7 +143,7 @@ public final class NanoStopWatch {
 		}
 	}
 
-	public synchronized void printElapsedTime(final Writer writer) {
+	public void printElapsedTime(final Writer writer) {
 		try {
 			if (stop != 0) {
 				writer.write("Elapsed Time: " + getElapsed() + "\n");
@@ -234,8 +163,7 @@ public final class NanoStopWatch {
 	public String toString() {
 		return toString(getElapsed());
 	}
-	
-	
+
 	public static String toString(final long elapsed) {
 		long resid = elapsed;
 
@@ -270,7 +198,6 @@ public final class NanoStopWatch {
 					String.format("%06d", micros);
 			return sb;
 		}
-		
 	}
 
 }

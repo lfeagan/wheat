@@ -6,22 +6,11 @@ plugins {
 group = 'com.github.lfeagan'
 
 dependencies {
-    implementation(libs.lombok)
-    annotationProcessor(libs.lombok)
-
-    implementation(libs.jetbrains.annotations)
-
     // PeriodDuration
     api(libs.threeten.extra)
 
-    // Joiner, ImmutableSet
-    implementation(libs.guava)
-
     // Logging
     implementation(libs.slf4j.api)
-
-    // Pair
-    api(libs.commons.lang3)
 
     testImplementation(libs.testng)
 }
