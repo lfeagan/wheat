@@ -24,7 +24,7 @@ public final class JdbcUtils {
      * Closes the specified non-null statement and suppresses any thrown exceptions.
      * @param statement the statement to close, which can be <code>null</code>
      */
-    public static void closeWithoutException(Statement statement) {
+    public static <S extends Statement> void closeWithoutException(S statement) {
         if (statement != null) {
             try {
                 statement.close();

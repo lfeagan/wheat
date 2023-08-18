@@ -1,5 +1,24 @@
 # wheat
-A staple set of libraries for Java
+A staple set of libraries for Java.
+
+## How to Get Wheat
+You can add this library into your Maven/Gradle/SBT/Leiningen project thanks to JitPack.io. Follow the instructions [here](https://jitpack.io/#lfeagan/distributed-task-manager).
+
+### Example Gradle Instructions
+
+Add this into your build.gradle file:
+
+```groovy
+allprojects {
+  repositories {
+    maven { url 'https://jitpack.io' }
+  }
+}
+
+dependencies {
+  implementation 'com.github.lfeagan:wheat:0.0.2'
+}
+```
 
 ## Dependencies
 1. [ThreeTen Extra](https://www.threeten.org/threeten-extra/) -- For class PeriodDuration
