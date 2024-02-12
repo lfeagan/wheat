@@ -32,7 +32,7 @@ dependencyResolutionManagement {
             library('slf4j-api', 'org.slf4j:slf4j-api:2.0.11')
             library('logback-classic', 'ch.qos.logback:logback-classic:1.4.14')
             // Janino (for Logback conditional processing)
-            library('janino', 'org.codehaus.janino:janino:3.1.10')
+            library('janino', 'org.codehaus.janino:janino:3.1.12')
 
             // threeten additional Java8 Time classes
             library('threeten-extra', 'org.threeten:threeten-extra:1.7.2')
