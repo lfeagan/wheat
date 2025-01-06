@@ -38,7 +38,7 @@ dependencyResolutionManagement {
             library('threeten-extra', 'org.threeten:threeten-extra:1.8.0')
 
             // Resilience4j retry library for backoff algorithm
-            library('resilience4j-retry', 'io.github.resilience4j:resilience4j-retry:2.2.0')
+            library('resilience4j-retry', 'io.github.resilience4j:resilience4j-retry:2.3.0')
 
             // AspectJ
             version('aspectj', '1.9.19')
