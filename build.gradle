@@ -8,7 +8,7 @@ buildscript {
     dependencies {
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:6.+"
         classpath "com.github.evestera:plugin:0.1.0"
-        classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.2.6"
+        classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.3.0"
     }
 }
 
