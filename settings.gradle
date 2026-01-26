@@ -50,7 +50,7 @@ dependencyResolutionManagement {
             // Java Memory Allocation Tracing
             library('java-allocation-instrumenter', 'com.google.code.java-allocation-instrumenter:java-allocation-instrumenter:3.3.4')
 
-            library('testng', 'org.testng:testng:7.11.0')
+            library('testng', 'org.testng:testng:7.12.0')
 
             library('errorprone-common', 'com.google.errorprone:error_prone_core:2.46.0') // # was using def in gradle files
         }
